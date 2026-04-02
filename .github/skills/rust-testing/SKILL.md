@@ -49,3 +49,30 @@ argument-hint: 'Describe the Rust testing task, failure, or test coverage you ne
 - Test-only helpers are clearly separated from production behavior
 - New mocks or fixtures are justified and minimal
 - Test code does not rely on commented-out cases, arbitrary sleeps, or leftover debug printing
+
+## Results Presentation Template
+
+When presenting completed testing work to the user, structure the response as:
+
+**Changes Made:**
+- List test files created or modified
+- Summarize what behavior is now covered
+- Note any test utilities or fixtures added
+
+**Validation Results:**
+```
+cargo test <specific_test> → [PASSED/FAILED]
+cargo test → [X passed, Y failed]
+cargo clippy --tests → [clean/N warnings]
+```
+
+**Next Steps:**
+Suggest 2-3 logical follow-ups based on context:
+- "Run `cargo test --doc` to verify documentation examples"
+- "Add integration tests in `tests/` for public API behavior"
+- "Consider property-based tests with `proptest` for edge case coverage"
+- "Add benchmarks with `criterion` if performance is critical"
+- "For embedded targets, validate on hardware with [specific command]"
+- "Improve coverage for error paths in [specific module]"
+
+Keep the presentation concise. Link to modified files using workspace-relative paths. Skip sections that don't apply to the specific work completed.

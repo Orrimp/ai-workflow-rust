@@ -50,3 +50,34 @@ argument-hint: 'Describe the Rust feature, refactor, or API change to make'
 - No stray `dbg!`, temporary `println!`, or commented-out code remains in finished changes
 - Tests cover the changed behavior
 - Formatting, linting, and tests were attempted when available
+
+## Results Presentation Template
+
+When presenting completed development work to the user, structure the response as:
+
+**Changes Made:**
+- List files created or modified
+- Summarize the feature, refactor, or API change
+- Note any new dependencies or Cargo.toml changes
+- Highlight breaking changes or migration requirements
+
+**Validation Results:**
+```
+cargo fmt → [formatted/no changes]
+cargo clippy → [clean/N warnings]
+cargo test → [X passed, Y failed]
+cargo check --target <embedded-target> → [success/failed]
+```
+
+**Next Steps:**
+Suggest 2-3 logical follow-ups based on context:
+- "Add integration tests in `tests/` for the new public API"
+- "Update documentation with usage examples in [module].rs"
+- "Run `cargo audit` to check new dependencies for security advisories"
+- "Consider adding benchmarks with `criterion` for performance-critical paths"
+- "For embedded targets, validate timing constraints and memory usage"
+- "Review error handling completeness in [specific module]"
+- "Add property-based tests with `proptest` for complex transformations"
+- "Update CHANGELOG.md or migration guide if this introduces breaking changes"
+
+Keep the presentation concise. Link to modified files using workspace-relative paths. Skip sections that don't apply to the specific work completed.
