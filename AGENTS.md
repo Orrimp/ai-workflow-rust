@@ -50,3 +50,11 @@
 - For async applications, prefer `tokio` if the repository is choosing a runtime from scratch; for CPU-bound parallelism, prefer dedicated worker threads or `rayon` instead of blocking the async executor.
 - Use `cargo` as the default interface for build, test, lint, docs, and dependency workflows.
 - Preserve formatting and organization in unrelated files. Do not rewrite large sections without a task-specific reason.
+
+## Project Goals
+
+**MVP** — Port the AGC `EXECUTIVE` (cooperative priority scheduler + `WAITLIST`) to idiomatic Rust. If time allows, add one navigation component (`SERVICER`, `ORBITAL_INTEGRATION`, or `CONIC_SUBROUTINES`) to prove the scheduler drives real domain logic.
+
+**Deliverable** — A presentation on *methodology*, not code: how we read AGC assembly, understood the architecture, and mapped it to Rust. The implementation is evidence; the process is the story.
+
+**Long-term** — Full `no_std` port of Luminary099 → runs on an ESP8266 → real IMU attached → physical DSKY built → rockets. The last step is just rocket science.

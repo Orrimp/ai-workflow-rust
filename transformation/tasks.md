@@ -2,108 +2,28 @@
 
 ## Active Tasks
 
-_No active tasks yet_
+_None_
 
 ## Backlog
 
-### High Priority
+### Milestone 1 — EXECUTIVE + WAITLIST
 
-- [ ] **Setup**: Create Rust workspace structure (Cargo.toml, src/, tests/)
-- [ ] **Spec**: Define core fixed-point arithmetic types (data-structure-spec.md)
-- [ ] **Spec**: Define Vector3/Quaternion types (data-structure-spec.md)
-- [ ] **Infrastructure**: Set up CI/CD pipeline
-- [ ] **Documentation**: Document project structure in README.md
+- [ ] **ADR-002** — Decide workspace vs single crate; create `Cargo.toml`
+- [ ] **ADR-003** — Spike fixed-point library (`fixed` crate vs custom newtype); document decision
+- [ ] **Spec** — Write `EXECUTIVE` module spec (`specs/executive-module-spec.md`)
+- [ ] **Impl** — Implement `Executive` scheduler (job table, priority ordering, `STARTJOB`/`ENDJOB`/`NOVAC`)
+- [ ] **Spec** — Write `WAITLIST` module spec (`specs/waitlist-module-spec.md`)
+- [ ] **Impl** — Implement `Waitlist` (delta-time chain, up to 9 pending tasks)
+- [ ] **Impl** — Phase-table restart protection
+- [ ] **Tests** — All scheduler unit tests passing
 
-### Medium Priority
+### Milestone 2 — Navigation Component (optional)
 
-- [ ] **Spec**: AGC memory model (erasable/fixed/channels)
-- [ ] **Spec**: Basic I/O channel abstractions
-- [ ] **Research**: Analyze existing Rust AGC implementations (ragc, apollo-gateway-rs)
-- [ ] **Tooling**: Set up cargo-watch, cargo-nextest
-- [ ] **Testing**: Define test oracle strategy
-
-### Low Priority
-
-- [ ] **Documentation**: Write contribution guide
-- [ ] **Tooling**: Set up benchmarking framework
-- [ ] **Research**: Investigate WASM compilation for web demos
+- [ ] Choose nav component (`SERVICER`, `ORBITAL_INTEGRATION`, or `CONIC_SUBROUTINES`)
+- [ ] Write spec file
+- [ ] Implement and schedule via EXECUTIVE
+- [ ] Validate against Virtual AGC
 
 ## Completed
 
 _No completed tasks yet_
-
-## Task Template
-
-When adding a new task, use this format:
-
-```markdown
-### [TASK-XXX] Task Title
-
-**Type**: Spec / Implementation / Testing / Documentation / Infrastructure  
-**Priority**: High / Medium / Low  
-**Component**: [Which AGC component or Rust module]  
-**Status**: Not Started / In Progress / Blocked / Complete  
-**Assignee**: [Name or @Agent]  
-**Estimate**: [Time estimate]  
-**Dependencies**: [List of blocking tasks]
-
-**Description**:
-[Detailed description of what needs to be done]
-
-**Acceptance Criteria**:
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-**Notes**:
-[Any additional context, links, or observations]
-
-**Related**:
-- Spec: [Link to spec file if applicable]
-- Issues: [Related blockers or issues]
-```
-
-## Kanban View
-
-### Not Started
-
-- Setup: Create Rust workspace structure
-- All specs
-
-### In Progress
-
-_No tasks in progress_
-
-### Blocked
-
-_No blocked tasks_
-
-### Review
-
-_No tasks in review_
-
-### Done
-
-_No completed tasks_
-
-## Sprint Planning
-
-### Sprint 1 (TBD)
-
-**Goal**: Establish foundation infrastructure
-
-**Tasks**:
-- [ ] Create Rust workspace
-- [ ] Define core types spec
-- [ ] Set up CI/CD
-- [ ] First implementation (fixed-point arithmetic)
-
-**Capacity**: TBD  
-**Actual**: TBD
-
-## Notes
-
-- Use `@Rust Implementer` for implementation tasks
-- Use `@Rust Code Review` before marking tasks complete
-- Update [progress.md](progress.md) when tasks complete
-- Link tasks to specs in [specifications.md](specifications.md)

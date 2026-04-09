@@ -2,123 +2,334 @@
 
 A guide for reimplementing the Apollo 11 Guidance Computer software in Rust.
 
-## Core Knowledge Required
+## Source Repository Reference
 
-### 1. AGC Architecture Understanding
+**[https://github.com/chrislgarry/Apollo-11](https://github.com/chrislgarry/Apollo-11)**
 
-- **16-bit word machine** with unusual addressing modes
-- **Fixed and erasable memory** (ROM/RAM) architecture
-- **Interpretive vs basic instructions** - dual instruction sets
-- **Priority-based interrupt system** with restart protection
-- **Display/Keyboard (DSKY) interface** protocol
+Original AGC source code digitized from MIT Museum hardcopies (Paul Fjeld / Deborah Douglas).  
+64.9k stars · 7.4k forks · 208 contributors · Active as of 2026 · License: Public Domain
 
-### 2. Domain Knowledge
+### Repository Layout
 
-- **Orbital mechanics** (Kepler orbits, Lambert targeting, rendezvous)
-- **Inertial navigation** (IMU integration, gimbal lock avoidance)
-- **Kalman filtering** for state estimation
-- **Quaternions** and rotation matrices
-- **Fixed-point arithmetic** (AGC used scaled integers, not floating point)
+```
+Apollo-11/
+├── Comanche055/   # Command Module (CM) — Colossus 2A, rev 055, assembled 1 Apr 1969
+└── Luminary099/   # Lunar Module (LM) — Luminary 1A, rev 001, assembled 14 Jul 1969
+```
 
-### 3. Real-time Systems Concepts
+Each directory contains ~70–80 `.agc` source files assembled with **yaYUL**.
 
-- **Cooperative multitasking** with priority scheduling
-- **Waitlist/job queue** management
-- **Restart protection** (checkpointing mid-calculation)
+---
 
-## Recommended Rust Ecosystem
+### Comanche055 — Command Module Key Files
 
-### Core Crates
+| File | Purpose |
+|---|---|
+| `MAIN.agc` | Top-level include / entry point |
+| `EXECUTIVE.agc` | Priority scheduler (cooperative multitasking) |
+| `WAITLIST.agc` | Deferred task queue |
+| `INTERPRETER.agc` | ~79 KB — interpretive floating-point language on integer hardware |
+| `ERASABLE_ASSIGNMENTS.agc` | ~102 KB — all RAM variable declarations |
+| `FRESH_START_AND_RESTART.agc` | Cold start + restart recovery |
+| `PHASE_TABLE_MAINTENANCE.agc` | Restart checkpoint tables |
+| `ALARM_AND_ABORT.agc` | Fault handling |
+| `INTERRUPT_LEAD_INS.agc` | Interrupt vector dispatch |
+| `T4RUPT_PROGRAM.agc` | ~38 KB — 100 Hz timer interrupt (main control loop) |
+| `PINBALL_GAME_BUTTONS_AND_LIGHTS.agc` | ~100 KB — entire DSKY UI handler |
+| `PINBALL_NOUN_TABLES.agc` | DSKY noun/verb display tables |
+| `DISPLAY_INTERFACE_ROUTINES.agc` | ~40 KB — display driver |
+| `CONIC_SUBROUTINES.agc` | ~47 KB — orbital mechanics (conics, Lambert) |
+| `ORBITAL_INTEGRATION.agc` | Trajectory propagation |
+| `IMU_MODE_SWITCHING_ROUTINES.agc` | Inertial measurement unit control |
+| `IMU_COMPENSATION_PACKAGE.agc` | IMU error correction |
+| `IMU_CALIBRATION_AND_ALIGNMENT.agc` | IMU alignment procedures |
+| `INFLIGHT_ALIGNMENT_ROUTINES.agc` | Mid-flight IMU realignment |
+| `KALCMANU_STEERING.agc` | Attitude maneuver steering |
+| `GIMBAL_LOCK_AVOIDANCE.agc` | Singularity prevention |
+| `RCS-CSM_DIGITAL_AUTOPILOT.agc` | Reaction control autopilot |
+| `CM_ENTRY_DIGITAL_AUTOPILOT.agc` | ~31 KB — reentry autopilot |
+| `REENTRY_CONTROL.agc` | ~32 KB — reentry guidance |
+| `JET_SELECTION_LOGIC.agc` | RCS thruster selection |
+| `P11.agc` | P11 — Earth orbit insertion |
+| `P20-P25.agc` | ~71 KB — Rendezvous navigation programs |
+| `P37_P70.agc` | ~38 KB — Return-to-Earth / abort |
+| `P40-P47.agc` | ~51 KB — SPS engine burn programs |
+| `P51-P53.agc` | ~41 KB — IMU orientation programs |
+| `INTEGRATION_INITIALIZATION.agc` | State vector initialization |
+| `DOWN-TELEMETRY_PROGRAM.agc` | Telemetry downlink |
+| `SERVICER207.agc` | Navigation servicer (state update loop) |
+| `MEASUREMENT_INCORPORATION.agc` | Kalman filter measurement update |
+| `TIME_OF_FREE_FALL.agc` | Free-fall/ coasting trajectory |
+| `INTER-BANK_COMMUNICATION.agc` | Cross-bank subroutine calls |
+| `SINGLE_PRECISION_SUBROUTINES.agc` | Basic math utilities |
+| `CONTRACT_AND_APPROVALS.agc` | Program signatures (Margaret H. Hamilton et al.) |
 
-#### Numerical Computing
+---
 
-- `nalgebra` - Linear algebra (vectors, matrices, quaternions)
-- `simba` - SIMD-accelerated math
-- `fixed` or `fixed-point` - Fixed-point arithmetic to match AGC behavior
-- `num-traits` - Generic numeric traits
+### Luminary099 — Lunar Module Key Files
 
-#### Simulation & Emulation
+| File | Purpose |
+|---|---|
+| `MAIN.agc` | Top-level include / entry point |
+| `EXECUTIVE.agc` | Priority scheduler |
+| `WAITLIST.agc` | Deferred task queue |
+| `INTERPRETER.agc` | ~79 KB — interpretive language (same design as CM) |
+| `ERASABLE_ASSIGNMENTS.agc` | ~78 KB — RAM variables |
+| `FRESH_START_AND_RESTART.agc` | Cold start + restart |
+| `THE_LUNAR_LANDING.agc` | High-level landing sequence logic |
+| `LUNAR_LANDING_GUIDANCE_EQUATIONS.agc` | Core powered-descent guidance |
+| `ASCENT_GUIDANCE.agc` | Ascent phase guidance |
+| `BURN_BABY_BURN--MASTER_IGNITION_ROUTINE.agc` | Engine ignition sequencer |
+| `P-AXIS_RCS_AUTOPILOT.agc` | ~21 KB — pitch-axis RCS autopilot |
+| `Q_R-AXIS_RCS_AUTOPILOT.agc` | ~17 KB — yaw/roll-axis RCS autopilot |
+| `DAPIDLER_PROGRAM.agc` | Digital autopilot idle mode |
+| `TJET_LAW.agc` | ~17 KB — thruster jet firing law |
+| `THROTTLE_CONTROL_ROUTINES.agc` | DPS throttle control |
+| `TRIM_GIMBAL_CONTROL_SYSTEM.agc` | Engine gimbal trim |
+| `T4RUPT_PROGRAM.agc` | ~37 KB — 100 Hz timer interrupt |
+| `T6-RUPT_PROGRAMS.agc` | TIME6 interrupt (RCS firing) |
+| `CONIC_SUBROUTINES.agc` | ~48 KB — orbital mechanics |
+| `ORBITAL_INTEGRATION.agc` | Trajectory propagation |
+| `KALMAN_FILTER.agc` | Navigation filter |
+| `MEASUREMENT_INCORPORATION.agc` | Filter measurement update |
+| `IMU_MODE_SWITCHING_ROUTINES.agc` | IMU control |
+| `IMU_COMPENSATION_PACKAGE.agc` | IMU error model |
+| `AGS_INITIALIZATION.agc` | Abort Guidance System init |
+| `AOSTASK_AND_AOSJOB.agc` | ~29 KB — abort orbiting sequence |
+| `AOTMARK.agc` | ~17 KB — Alignment Optical Telescope marking |
+| `P20-P25.agc` | ~121 KB — Rendezvous programs (largest LM file) |
+| `P40-P47.agc` | DPS burn programs |
+| `P51-P53.agc` | IMU orientation programs |
+| `P70-P71.agc` | Abort programs (famous 1202/1201 alarm context) |
+| `LANDING_ANALOG_DISPLAYS.agc` | Landing radar analog display |
+| `RADAR_LEADIN_ROUTINES.agc` | Landing/rendezvous radar init |
+| `RCS_FAILURE_MONITOR.agc` | Thruster failure detection |
+| `SPS_BACK-UP_RCS_CONTROL.agc` | RCS backup for SPS fails |
+| `INPUT_OUTPUT_CHANNEL_BIT_DESCRIPTIONS.agc` | I/O channel register map |
+| `DOWN_TELEMETRY_PROGRAM.agc` | Telemetry downlink |
+| `AGC_BLOCK_TWO_SELF_CHECK.agc` | Hardware self-test at startup |
+| `GIMBAL_LOCK_AVOIDANCE.agc` | Singularity prevention |
+| `INTER-BANK_COMMUNICATION.agc` | Cross-bank calls |
+| `GENERAL_LAMBERT_AIMPOINT_GUIDANCE.agc` | Lambert targeting |
+| `STABLE_ORBIT.agc` | Stable orbit hold mode |
+| `SERVICER.agc` | ~35 KB — navigation servicer |
+| `INTEGRATION_INITIALIZATION.agc` | State vector init |
 
-- `bitflags` - Hardware register modeling
-- `nom` or `pest` - Parsing AGC assembly if you want to load original code
-- `dashmap` - Concurrent data structures for multi-threaded state
+---
 
-#### no_std Support (if targeting embedded)
+### Engineering Patterns Observed in the Source
 
-- `heapless` - Stack-based collections
-- `arrayvec` - Fixed-capacity vectors
-- `embedded-hal` - Hardware abstraction for peripheral access
-- `cortex-m` or `riscv` - If running on actual microcontrollers
+**1. Cooperative multitasking under extreme constraints**
+The `EXECUTIVE` + `WAITLIST` pair implements a lightweight cooperative scheduler with priority levels, fitting in a 4 KB RAM / 72 KB ROM envelope. No OS, no heap — all job slots are statically allocated.
 
-#### Testing & Validation
+**2. Restart protection via phase tables**
+`PHASE_TABLE_MAINTENANCE.agc` tracks which phase of a long computation is in progress. On restart, the program re-enters at the last reliable checkpoint. This is an early form of persisted execution state — analogous to modern saga/workflow patterns.
 
-- `proptest` or `quickcheck` - Property-based testing for orbital mechanics
-- `approx` or `float-cmp` - Floating-point comparison with tolerance
-- `criterion` - Benchmarking for performance-critical guidance loops
+**3. Interpretive language as a portability/power layer**
+`INTERPRETER.agc` implements a complete floating-point interpretive instruction set on top of the 15-bit integer AGC hardware. Programs like `CONIC_SUBROUTINES.agc` run in this interpreter for complex math. This dual-mode design (basic assembly + interpreted) mirrors modern VM-on-hardware designs.
+
+**4. Banked memory calls**
+The AGC ROM was split into fixed/switchable banks. `INTER-BANK_COMMUNICATION.agc` provides the calling convention for cross-bank subroutines — critical to correctly emulate when translating to Rust modules.
+
+**5. 1202/1201 alarm handling**
+The famous executive overflow alarms during lunar landing are handled in `ALARM_AND_ABORT.agc`. The computer shed lower-priority tasks and recovered — a real-time priority inversion solution from 1969.
+
+**6. The DSKY "Pinball" interface**
+`PINBALL_GAME_BUTTONS_AND_LIGHTS.agc` (~100 KB) is the largest single source file in Comanche and handles all verb/noun/program display logic. The informal name "Pinball" was the MIT engineers' own nickname for the display driver.
+
+---
+
+## AGC Software Architecture
+
+The architecture is revealed directly by the `MAIN.agc` include order, which acts as a link script: it defines the physical ROM layout and thus the intended dependency graph. Nine layers are identifiable from top to bottom.
+
+```mermaid
+graph TB
+    %% ─────────────────────────────────────────────
+    %% Layer 1 — Hardware
+    %% ─────────────────────────────────────────────
+    subgraph HW["① Hardware — AGC Block II"]
+        direction LR
+        CPU["CPU\n15-bit word / 1's complement\n~43 kHz effective throughput"]
+        ROM["Fixed Memory (ROM)\n36,864 words\n36 switchable banks"]
+        RAM["Erasable Memory (RAM)\n2,048 words\n(ERASABLE_ASSIGNMENTS)"]
+        IOC["I/O Channels\n12-bit registers\n(sensors, DSKY, RCS, engine)"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% Layer 2 — Real-Time Interrupt Core
+    %% ─────────────────────────────────────────────
+    subgraph RT["② Real-Time Interrupt Core"]
+        direction LR
+        T4["T4RUPT — 100 Hz\nMaster control tick\nT4RUPT_PROGRAM.agc"]
+        T6["T6RUPT — variable rate\nRCS jet timing\n(LM only)"]
+        KEY["KEYRUPT / UPRUPT\nDSKY keystroke\n& uplink data"]
+        BANKS["INTER-BANK_COMMUNICATION\nBank-switching call convention\nfor cross-ROM subroutines"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% Layer 3 — Executive OS
+    %% ─────────────────────────────────────────────
+    subgraph OS["③ Executive OS"]
+        direction LR
+        EXEC["EXECUTIVE\nCooperative priority scheduler\n7 concurrent job slots"]
+        WAIT["WAITLIST\nTimer-deferred job queue\n(up to 9 pending tasks)"]
+        SVC["SERVICE_ROUTINES\nShared utility subroutines"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% Layer 4 — Fault Tolerance & Restart
+    %% ─────────────────────────────────────────────
+    subgraph FAULT["④ Fault Tolerance & Restart"]
+        direction LR
+        SELF["AGC_BLOCK_TWO_SELF_CHECK\nHardware self-test at boot"]
+        FRESH["FRESH_START_AND_RESTART\nCold & warm boot logic"]
+        PHASE["PHASE_TABLE_MAINTENANCE\nCheckpoint mid-calculation\nRun-phase tracking"]
+        ALARM["ALARM_AND_ABORT\n1202 / 1201 executive overflow\nTask shedding & recovery"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% Layer 5 — Interpreter & Math Runtime
+    %% ─────────────────────────────────────────────
+    subgraph INTERP["⑤ Interpreter & Math Runtime"]
+        direction LR
+        INTP["INTERPRETER — ~79 KB\nFP interpretive instruction set\nlayered on integer hardware\n(vectors, matrices, trig, sqrt)"]
+        CONSTS["FIXED_FIXED_CONSTANT_POOL\nINTERPRETIVE_CONSTANTS\nSINGLE_PRECISION_SUBROUTINES"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% Layer 6 — IMU Subsystem
+    %% ─────────────────────────────────────────────
+    subgraph IMU["⑥ IMU Subsystem"]
+        direction LR
+        ICOMP["IMU_COMPENSATION_PACKAGE\nError model & drift correction"]
+        IMODE["IMU_MODE_SWITCHING_ROUTINES\nCoarse / fine align mode control"]
+        IALIGN["IMU_CALIBRATION_AND_ALIGNMENT (CM)\nINFLIGHT_ALIGNMENT_ROUTINES (both)\nP51–P53 stellar alignment programs"]
+        GLOCK["GIMBAL_LOCK_AVOIDANCE\nSingularity margin check"]
+        MANUV["KALCMANU_STEERING\nATTITUDE_MANEUVER_ROUTINE (LM)\nSmoothed attitude slew"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% Layer 7 — Navigation (State Estimation)
+    %% ─────────────────────────────────────────────
+    subgraph NAV["⑦ Navigation — State Estimation"]
+        direction LR
+        SERV["SERVICER / SERVICER207\nPeriodic nav update loop\n(scheduled via WAITLIST)"]
+        OI["ORBITAL_INTEGRATION\nINTEGRATION_INITIALIZATION\nEncke-method propagation"]
+        CONIC["CONIC_SUBROUTINES — ~48 KB\nLambert targeting\nConic orbit determination"]
+        KAL["MEASUREMENT_INCORPORATION\n+ KALMAN_FILTER (LM)\nRadar / optical measurement fusion"]
+        EPH["LUNAR_AND_SOLAR_EPHEMERIDES\nPLANETARY_INERTIAL_ORIENTATION\nLATITUDE_LONGITUDE_SUBROUTINES\nTIME_OF_FREE_FALL"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% Layer 8 — Guidance Programs (P-codes)
+    %% ─────────────────────────────────────────────
+    subgraph GUID["⑧ Guidance Programs (Mission P-codes)"]
+        direction LR
+        RNDZ["Rendezvous\nP20–P25, P30–P37\nP32–P35 / P72–P75"]
+        BURN_P["Burns & Ignition\nP40–P47 SPS/DPS burn\nBURN_BABY_BURN ignition\nTHROTTLE_CONTROL (LM)"]
+        LAND["Lunar Landing (LM)\nTHE_LUNAR_LANDING\nLUNAR_LANDING_GUIDANCE_EQUATIONS\nASCENT_GUIDANCE"]
+        ENTRY_P["Entry & Return (CM)\nP61–P67, REENTRY_CONTROL\nCM_ENTRY_DIGITAL_AUTOPILOT"]
+        ABORT_P["Abort\nP70–P71 (LM)\nP37_P70 (CM)\nAGS_INITIALIZATION (LM)"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% Layer 9 — Digital Autopilot (DAP / Control)
+    %% ─────────────────────────────────────────────
+    subgraph DAP["⑨ Digital Autopilot (DAP) — Attitude & Thrust Control"]
+        direction LR
+        RCSCM["CM RCS DAP\nRCS-CSM_DIGITAL_AUTOPILOT\nJET_SELECTION_LOGIC\nAUTOMATIC_MANEUVERS"]
+        RCSLM["LM RCS DAP\nP-AXIS_RCS_AUTOPILOT\nQ_R-AXIS_RCS_AUTOPILOT\nTJET_LAW / DAPIDLER"]
+        TVC["CM TVC DAP\nTVCDAPS / TVCROLLDAP\nTVCEXECUTIVE / TVCMASSPROP\nThrust vector control"]
+        THR_CTRL["LM Descent Control\nTHROTTLE_CONTROL_ROUTINES\nTRIM_GIMBAL_CONTROL_SYSTEM\nDAP_INTERFACE_SUBROUTINES"]
+        FAIL["RCS_FAILURE_MONITOR\nSPS_BACK-UP_RCS_CONTROL"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% I/O Layer (parallel to guidance layer)
+    %% ─────────────────────────────────────────────
+    subgraph IO["⑩ I/O Layer"]
+        direction LR
+        DSKY["DSKY — 'Pinball'\nPINBALL_GAME_BUTTONS_AND_LIGHTS\nPINBALL_NOUN_TABLES\nDISPLAY_INTERFACE_ROUTINES"]
+        SENS["Sensors\nSXTMARK (CM sextant)\nAOTMARK (LM opt. telescope)\nRADAR_LEADIN (LM landing radar)\nS-BAND_ANTENNA"]
+        TLM["Telemetry\nDOWN-TELEMETRY_PROGRAM\nDOWNLINK_LISTS"]
+    end
+
+    %% ─────────────────────────────────────────────
+    %% Edges — data / control flow
+    %% ─────────────────────────────────────────────
+    HW          --> RT
+    RT          -->|"T4RUPT schedules DAP job"| OS
+    RT          -->|"T4RUPT fires directly"| DAP
+    OS          -->|"runs jobs"| INTERP
+    OS          -->|"runs jobs"| NAV
+    OS          -->|"runs jobs"| GUID
+    FAULT       -->|"restart resumes job"| OS
+    INTERP      -->|"float math ops"| NAV
+    IMU         -->|"attitude + delta-V"| NAV
+    IMU         -->|"current attitude"| DAP
+    SENS        -->|"radar / optical marks"| KAL
+    NAV         -->|"state vector"| GUID
+    GUID        -->|"attitude & thrust cmds"| DAP
+    GUID        -->|"DSKY verb/noun display"| IO
+    DSKY        -->|"crew program requests"| OS
+    DAP         -->|"thruster / gimbal cmds"| IOC
+    TLM         -->|"downlink frames"| IOC
+    KEY         -->|"DSKY input → job"| OS
+```
+
+### How the Layers Interact
+
+| Signal / Event | Source | Flows Through | Destination |
+|---|---|---|---|
+| 100 Hz tick | T4RUPT | — | T4RUPT handler → schedules DAP job via EXEC |
+| Nav state update | WAITLIST timer | EXECUTIVE → SERVICER → ORBITAL_INTEGRATION | State vector (RAM) |
+| Crew VERB/NOUN | KEYRUPT → DSKY | PINBALL → EXECUTIVE | Guidance P-program job |
+| Guidance command | P-code (e.g. P63) | EXECUTIVE → LUNAR_LANDING_GUIDANCE | DAP attitude/thrust target |
+| Attitude error | DAP | IMU delta-angle registers | RCS/TVC actuator channels |
+| Kalman update | Radar mark | MEASUREMENT_INCORPORATION → KALMAN_FILTER | State vector correction |
+| 1202 alarm | EXECUTIVE overflow | ALARM_AND_ABORT | Shed low-priority jobs, continue |
+| Warm restart | Power glitch / alarm | FRESH_START → PHASE_TABLE | Re-enter mid-calculation |
+| Telemetry frame | Every cycle | DOWNLINK_LISTS → DOWN-TELEMETRY | I/O channel to S-band |
+
+### T4RUPT — The Heartbeat
+
+Every 10 ms the T4RUPT interrupt fires and drives the entire system:
+
+```
+T4RUPT (100 Hz)
+ ├── Sample IMU (delta-angle, delta-velocity registers)
+ ├── Update DAP error signals → compute RCS/TVC commands
+ ├── Dispatch thruster fire pulses (T6RUPT on LM)
+ ├── Service DSKY display refresh
+ └── Return to EXECUTIVE / WAITLIST round-robin
+```
+
+The EXECUTIVE then runs whichever guidance job has the highest priority (navigation servicer, active P-program, or DSKY handler).
+
+---
+
+## Core Knowledge Required (MVP)
+
+- **15-bit word, 1's complement** — not standard two's complement; all arithmetic is scaled fixed-point
+- **Fixed and erasable memory** (ROM 36 KB / RAM 2 KB) — no heap; all state is statically allocated
+- **Cooperative multitasking** — EXECUTIVE runs the highest-priority ready job; jobs yield voluntarily
+- **WAITLIST** — timer-deferred job queue (up to 9 pending); the scheduler re-enqueues jobs on expiry
+- **Restart protection** — PHASE_TABLE_MAINTENANCE checkpoints long calculations; on restart the job re-enters at the last saved phase
+
+## Recommended Rust Ecosystem (MVP)
+
+- `heapless` — `no_std` fixed-capacity collections (job queue, WAITLIST ring)
+- `fixed` — fixed-point arithmetic matching AGC scaled integers
+- `bitflags` — hardware register / I/O channel modelling
+- `proptest` — property-based tests for scheduler invariants
+- `cargo-nextest`, `cargo-clippy`, `cargo-audit` — CI hygiene
 
 ## Architecture Decisions
 
-### 1. Emulator vs Reimplementation
+**Reimplementation, not emulation.** The goal is idiomatic Rust that captures the same scheduler semantics, not a cycle-accurate AGC binary runner. This keeps the code readable for the methodology presentation and portable to `no_std` targets.
 
-**Emulator**: Cycle-accurate AGC simulation (runs original .agc binaries)
-- Pros: Faithful to original hardware, can run actual Apollo code
-- Cons: Complex, requires deep hardware knowledge
-
-**Reimplementation**: Modern Rust code implementing the same algorithms
-- Pros: Cleaner code, easier to understand and extend
-- Cons: Not bit-for-bit compatible with original
-
-### 2. Structure Options
-
-```rust
-// Option A: Pure emulator
-struct AGC {
-    memory: [u16; 0x10000],
-    registers: Registers,
-    interrupt_mask: u16,
-}
-
-impl AGC {
-    fn execute_instruction(&mut self) -> Result<()>;
-    fn handle_interrupt(&mut self, vector: u16);
-}
-```
-
-```rust
-// Option B: Modular reimplementation
-mod guidance {
-    mod kalman_filter;
-    mod lambert_targeting;
-    mod powered_descent;
-}
-
-mod executive {
-    mod scheduler;
-    mod restart;
-}
-
-mod interpreter; // High-level interpretive language
-```
-
-### 3. Trait Design for Guidance Algorithms
-
-```rust
-trait GuidanceProgram {
-    fn initialize(&mut self, state: &VehicleState) -> Result<()>;
-    fn update(&mut self, dt: f64, state: &VehicleState) -> ControlOutput;
-    fn can_restart(&self) -> bool;
-}
-
-struct PoweredDescent {
-    target_position: Vector3,
-    throttle_law: ThrottleLaw,
-    // ...
-}
-
-impl GuidanceProgram for PoweredDescent {
-    // Implementation
-}
-```
+Single crate for MVP: `agc-executive`. Split into sub-crates only if compile times or module boundaries warrant it after the EXECUTIVE + WAITLIST are working.
 
 ## Suggested Approach
 
@@ -137,22 +348,6 @@ impl GuidanceProgram for PoweredDescent {
 3. IMU integration
 
 **Deliverable**: Orbital propagator matches known test cases
-
-### Phase 3: Guidance Programs
-
-1. Start with simpler programs (P20 rendezvous)
-2. Build up to P63/P64 powered descent
-3. Validate against known Apollo 11 telemetry data
-
-**Deliverable**: Recreate Apollo 11 descent trajectory
-
-### Phase 4: Integration
-
-1. DSKY interface (terminal or GUI)
-2. Real-time execution
-3. Telemetry/logging
-
-**Deliverable**: Interactive AGC simulator
 
 ## Learning Resources
 
@@ -186,140 +381,24 @@ impl GuidanceProgram for PoweredDescent {
 - "The Apollo Guidance Computer: Architecture and Operation" - Frank O'Brien
 - NASA Technical Reports on Kalman filtering and guidance equations
 
-## Validation Strategy
+## Validation Strategy (MVP)
 
-### Test Oracles
-
-**Orbital mechanics:**
-- Compare with `poliastro` (Python) or `orekit` (Java)
-- Known solutions from celestial mechanics textbooks
-- Two-body problem analytical solutions
-
-**AGC behavior:**
-- Run same inputs through Virtual AGC emulator
-- Compare instruction-by-instruction execution
-- Verify memory state at checkpoints
-
-**Historical data:**
-- Apollo 11 telemetry logs from NASA archives
-- Flight-proven trajectories
-- Mission timeline events
-
-### Test Categories
+All validation targets the EXECUTIVE + WAITLIST scheduler behaviour:
 
 ```rust
 #[cfg(test)]
 mod tests {
-    // Unit tests for individual functions
-    #[test]
-    fn test_two_body_propagation() { }
-    
-    // Integration tests for subsystems
-    #[test]
-    fn test_kalman_filter_update() { }
-    
-    // Property-based tests
-    #[test]
-    fn prop_orbital_energy_conserved() { }
-    
-    // Historical validation
-    #[test]
-    fn test_apollo_11_descent_trajectory() { }
+    #[test] fn highest_priority_job_runs_first() {}
+    #[test] fn job_slots_exhausted_triggers_alarm() {}
+    #[test] fn waitlist_fires_after_delta_t() {}
+    #[test] fn completed_job_frees_slot() {}
+    #[test] fn restart_resumes_at_saved_phase() {}
 }
 ```
 
-## Development Workflow Considerations
+If a navigation component (`SERVICER`, `ORBITAL_INTEGRATION`, or `CONIC_SUBROUTINES`) is added in Phase 2, compare its output against the Virtual AGC emulator for the same input state.
 
-### Should You Create a Specialized AGC-to-Rust Skill or Agent?
 
-There's a genuine trade-off between specialized tooling and simplicity.
-
-#### When a Specialized Skill/Agent Makes Sense
-
-**YES, create one if:**
-
-1. **You're doing systematic transformation** of many AGC modules
-   - Converting the entire Comanche055 or Luminary099 codebase
-   - Batch processing multiple .agc files
-   - Need repeatable transformation patterns
-
-2. **You want bundled reference materials**
-   - AGC instruction set quick reference
-   - Common transformation patterns (e.g., `DXCH → mem::swap`, `DCA → load_double`)
-   - Scaling factor lookup tables
-   - Memory map and register conventions
-
-3. **You need domain-specific validation**
-   - Verify fixed-point scaling matches original
-   - Check interrupt priorities preserved
-   - Validate restart protection logic
-   - Compare output semantics against Virtual AGC
-
-**Example skill structure:**
-```
-.github/skills/apollo-to-rust/
-├── SKILL.md                    # Transformation workflow
-├── agc-instruction-set.md      # Quick reference
-├── transformation-patterns.md  # Common AGC→Rust idioms
-└── scaling-tables.md           # Fixed-point scale factors
-```
-
-#### When to Skip It
-
-**NO, use existing rust-development skill if:**
-
-1. **One-time or learning project**
-   - Just exploring AGC architecture
-   - Building understanding before deciding on approach
-   - Experimental transformation
-
-2. **High-level reimplementation**
-   - Not translating line-by-line
-   - Implementing algorithms in idiomatic Rust
-   - Using this guide as conceptual reference only
-
-3. **Maintenance overhead isn't worth it**
-   - Adds another file to keep updated
-   - The existing rust-development skill + this guide covers most needs
-
-### Recommendation
-
-**Start without a specialized skill.** Here's why:
-
-1. **Your current setup may already be sufficient:**
-   - This Apollo.md provides architectural knowledge
-   - rust-development skill handles Rust implementation
-   - rust-testing skill covers validation
-
-2. **Create the skill later if you notice:**
-   - Repeating the same transformation questions
-   - Looking up the same AGC instructions repeatedly
-   - Needing the same validation checklist multiple times
-
-3. **A specialized agent might be overkill**, but consider it if:
-   - You want to isolate AGC analysis (read-only exploration) from Rust generation (code writing)
-   - You're building a translation pipeline where different stages have different tool needs
-
-### Lightweight Alternative
-
-Instead of a full skill, **enhance your AGENTS.md** with AGC-specific guidance:
-
-```markdown
-## Apollo AGC Transformation Notes
-
-When converting AGC assembly to Rust:
-- AGC uses 1's complement arithmetic, not 2's complement
-- All arithmetic is scaled fixed-point (track scaling metadata carefully)
-- EXTEND prefix doubles the following instruction's index register range
-- Interrupts: preserve priority order and restart semantics
-- DXCH exchanges double-precision values (consider mem::swap)
-- Cross-reference with Virtual AGC yaYUL assembler for edge cases
-- Test against known trajectories from Apollo mission data
-```
-
-This gives you specialized guidance without the overhead of a separate skill file.
-
-**Bottom line:** Wait until you've done a few transformations manually. If you find yourself copy-pasting the same reference info or asking the same questions, *then* extract it into a skill. Don't over-engineer upfront.
 
 ## Implementation Considerations
 
@@ -382,47 +461,16 @@ impl AGC {
 
 ## Milestones
 
-### Milestone 1: Basic Emulator
-- [ ] Memory system
-- [ ] Instruction decoder
-- [ ] Basic arithmetic instructions
-- [ ] Simple test programs run
+### Milestone 1: EXECUTIVE + WAITLIST (MVP)
+- [ ] Crate scaffold (`agc-executive`, `no_std`-ready)
+- [ ] Static job table (7 slots), priority ordering
+- [ ] `STARTJOB` / `ENDJOB` API
+- [ ] WAITLIST timer queue (up to 9 pending tasks)
+- [ ] Phase-table restart protection (5 phases)
+- [ ] All scheduler unit tests pass
 
-### Milestone 2: Interpretive Language
-- [ ] Interpretive instruction set
-- [ ] Vector/matrix operations
-- [ ] Transcendental functions (sin, cos, sqrt)
-
-### Milestone 3: Navigation Core
-- [ ] State vector representation
-- [ ] Orbital propagation
-- [ ] Coordinate transformations
-
-### Milestone 4: Guidance Algorithms
-- [ ] P20 (Rendezvous navigation)
-- [ ] P63 (Braking phase)
-- [ ] P64 (Approach phase)
-- [ ] P66 (Landing phase)
-
-### Milestone 5: Full System
-- [ ] DSKY interface
-- [ ] All major programs (P-codes)
-- [ ] Validate against Apollo 11 mission data
-- [ ] Performance optimization
-
-## Getting Started
-
-1. **Clone the existing Rust implementations** to study
-2. **Read Virtual AGC documentation** for hardware understanding
-3. **Start small**: Implement memory and basic instructions
-4. **Build incrementally**: Add complexity one subsystem at a time
-5. **Test continuously**: Validate against known correct behavior
-
-## Next Steps
-
-Consider which approach fits your goals:
-- **Educational**: Reimplementation with modern Rust idioms
-- **Historical accuracy**: Cycle-accurate emulator
-- **Practical**: Hybrid approach with accurate algorithms but modern structure
-
-The choice will determine your architecture and dependency choices.
+### Milestone 2: One Navigation Component (optional)
+- [ ] Choose one: `SERVICER`, `ORBITAL_INTEGRATION`, or `CONIC_SUBROUTINES`
+- [ ] Spec file written and reviewed
+- [ ] Implementation driven by EXECUTIVE scheduler
+- [ ] Output matches Virtual AGC emulator for same input state

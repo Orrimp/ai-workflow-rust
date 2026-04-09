@@ -1,124 +1,40 @@
-# Transformation Progress Dashboard
+# Transformation Progress
 
 **Last Updated**: [Date]
 
-## Overall Status
-
-| Component | Total | Not Started | In Progress | Complete | % Complete |
-|-----------|-------|-------------|-------------|----------|------------|
-| Data Structures | 0 | 0 | 0 | 0 | 0% |
-| Routines | 0 | 0 | 0 | 0 | 0% |
-| Modules | 0 | 0 | 0 | 0 | 0% |
-| Guidance Programs | 0 | 0 | 0 | 0 | 0% |
-| Interrupt Handlers | 0 | 0 | 0 | 0 | 0% |
-| **TOTAL** | **0** | **0** | **0** | **0** | **0%** |
-
 ## Milestones
 
-### Milestone 1: Foundation (Target: TBD)
+### Milestone 1: EXECUTIVE + WAITLIST (MVP)
 
-- [ ] Core fixed-point arithmetic types (`Scaled<N, T>`)
-- [ ] Vector and matrix types (`Vector3`, `Quaternion`)
-- [ ] AGC memory model types (`Address`, `Bank`)
-- [ ] Basic I/O channel abstractions
-- [ ] Unit test framework established
+- [ ] Crate scaffold (`agc-executive`, `no_std`-ready, `Cargo.toml`)
+- [ ] Fixed-point type(s) for AGC scaled integers
+- [ ] Static job table — 7 slots, priority ordering
+- [ ] `STARTJOB` / `ENDJOB` / `NOVAC` semantics
+- [ ] WAITLIST timer queue — up to 9 pending tasks, delta-time chain
+- [ ] Phase-table restart protection
+- [ ] All scheduler unit tests pass (`cargo nextest run`)
+- [ ] `cargo clippy -- -D warnings` clean
 
-**Status**: Not Started  
-**Blockers**: None
+**Status**: Not Started
 
-### Milestone 2: Executive and Services (Target: TBD)
+### Milestone 2: One Navigation Component (optional)
 
-- [ ] EXECUTIVE module (task scheduling)
-- [ ] WAITLIST (deferred task management)
-- [ ] SERVICER (display updates)
-- [ ] PINBALL (DSKY interface)
-- [ ] Interrupt infrastructure
+Choose one: `SERVICER`, `ORBITAL_INTEGRATION`, or `CONIC_SUBROUTINES`
 
-**Status**: Not Started  
-**Blockers**: Milestone 1
+- [ ] Spec file written and reviewed
+- [ ] Implementation scheduled via EXECUTIVE
+- [ ] Output matches Virtual AGC emulator for same input state
 
-### Milestone 3: Navigation and Sensors (Target: TBD)
-
-- [ ] IMU interface and simulation
-- [ ] State vector management
-- [ ] Navigation equations
-- [ ] Kalman filtering (if reimplementing)
-- [ ] Sensor data processing
-
-**Status**: Not Started  
-**Blockers**: Milestone 2
-
-### Milestone 4: Guidance Algorithms (Target: TBD)
-
-- [ ] P63 - Braking Phase
-- [ ] P64 - Approach Phase
-- [ ] P66 - ROD (Rate of Descent)
-- [ ] P67 - Abort
-- [ ] Integration tests with full descent profile
-
-**Status**: Not Started  
-**Blockers**: Milestone 3
-
-### Milestone 5: Validation and Refinement (Target: TBD)
-
-- [ ] Historical validation against Apollo 11 descent
-- [ ] Historical validation against Apollo 12-17
-- [ ] Performance benchmarks meet targets
-- [ ] Documentation complete
-- [ ] Code review complete
-
-**Status**: Not Started  
-**Blockers**: Milestone 4
-
-## Recent Completions
-
-_None yet_
+**Status**: Not Started — depends on Milestone 1
 
 ## Active Work
 
 _No active work items_
 
-## Next Up
-
-1. Decide on initial milestone scope
-2. Create first spec (recommendation: start with data structures or core types)
-3. Set up Rust project structure (Cargo.toml, workspace layout)
-
 ## Metrics
 
-### Lines of Code
-
-| Language | Lines | Files |
-|----------|-------|-------|
-| AGC Assembly | TBD | TBD |
-| Rust (src) | 0 | 0 |
-| Rust (tests) | 0 | 0 |
-
-### Test Coverage
-
-- **Unit tests**: 0 passing
-- **Integration tests**: 0 passing
-- **Historical validation tests**: 0 passing
-- **Coverage**: N/A
-
-### Quality
-
-- **Clippy warnings**: 0 (no code yet)
-- **Failed tests**: 0
-- **Open issues**: 0
-
-## Timeline
-
-| Phase | Start Date | End Date | Status |
-|-------|------------|----------|--------|
-| Planning | [Date] | [Date] | In Progress |
-| Foundation | TBD | TBD | Not Started |
-| Implementation | TBD | TBD | Not Started |
-| Validation | TBD | TBD | Not Started |
-
-## Notes
-
-- Project structure created
-- Spec templates available in `specs/`
-- Agents configured for spec-driven workflow
-- Ready to begin transformation work
+| | Count |
+|---|---|
+| Rust source files | 0 |
+| Unit tests passing | 0 |
+| Clippy warnings | — |
